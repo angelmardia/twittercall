@@ -99,6 +99,11 @@ def trigger_tweet():
     # Call the tweet_daily function and return a response
     return tweet_daily()
 
+# Flask route to ping the service manually
+@app.route('/', methods=['GET'])
+def ping_route():
+    return "Hello Word!!"
+
 # Set up the scheduler
 scheduler = BackgroundScheduler()
 
