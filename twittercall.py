@@ -38,26 +38,6 @@ generation_config = {
 # Timezone for IST
 IST = timezone('Asia/Kolkata')
 
-# Load history from history.json
-def load_history():
-    try:
-        with open('history.json', 'r') as f:
-            history = json.load(f)
-            # Ensure history is not empty, otherwise initialize as an empty list
-            if not history:
-                history = []
-    except FileNotFoundError:
-        # If file is not found, return an empty list
-        history = []
-    return history
-
-# Save response to history.json
-def save_to_history(response_text):
-    history = load_history()
-    history.append(response_text)
-    with open('history.json', 'w') as f:
-        json.dump(history, f, indent=4)
-
 # Function to run the scheduled task
 def tweet_daily():
     try:
@@ -85,20 +65,14 @@ def tweet_daily():
         category = random.choice(list(prompts['prompts'].keys()))
         selected_prompt = prompts['prompts'][category]["description"]
 
-        # Load the conversation history
-        history = load_history()
-
-        # Generate text using Google Generative AI with history (if not empty)
+        # Generate text using Google Generative AI
         model = genai.GenerativeModel(model_name="gemini-1.5-flash", generation_config=generation_config)
-        chat_session = model.start_chat(history=history if history else None)  # Pass history if available
+        chat_session = model.start_chat()
         response = chat_session.send_message(selected_prompt)
 
         # Print and post the generated text
         tweet_text = response.text
         print(tweet_text)
-
-        # Save the response to history
-        save_to_history(tweet_text)
 
         # Create the tweet using the new API
         post_result = newapi.create_tweet(text=tweet_text)
@@ -125,16 +99,11 @@ def trigger_tweet():
     # Call the tweet_daily function and return a response
     return tweet_daily()
 
-# Flask route to ping the service manually
-@app.route('/', methods=['GET'])
-def ping_route():
-    return "Hello Word!!"
-
 # Set up the scheduler
 scheduler = BackgroundScheduler()
 
 # Schedule the tweet to run at 1 PM IST every day
-scheduler.add_job(tweet_daily, 'cron', hour=19, minute=10, timezone='Asia/Kolkata')
+scheduler.add_job(tweet_daily, 'cron', hour=17, minute=15, timezone='Asia/Kolkata')
 
 # Schedule the ping service to run every 180 seconds
 scheduler.add_job(ping_service, 'interval', seconds=180)
