@@ -1,19 +1,19 @@
 {
   "prompts": {
     "technology": {
-      "description": "Write an insightful tweet that highlights a recent technological innovation or trend. It should capture the excitement of advancements while encouraging followers to think about the broader impact of technology on society."
+      "description": "Write an insightful tweet that highlights a recent technological innovation or trend. It should capture the excitement of advancements while encouraging followers to think about the broader impact of technology on society and character limit of the response generated should not exceed 100 character and keep it short and crisp."
     },
     "reactjs": {
-      "description": "Create a tweet that shares a useful tip or insight about React.js development. The tweet should appeal to both beginners and seasoned developers, offering something practical or thought-provoking about the React ecosystem."
+      "description": "Create a tweet that shares a useful tip or insight about React.js development. The tweet should appeal to both beginners and seasoned developers, offering something practical or thought-provoking about the React ecosystem and character limit of the response generated should not exceed 100 character and keep it short and crisp."
     },
     "aspnet": {
-      "description": "Generate a tweet that explores the capabilities of ASP.NET, sharing a best practice, feature update, or industry use case. It should engage both novice and experienced ASP.NET developers, providing value to those working on web applications."
+      "description": "Generate a tweet that explores the capabilities of ASP.NET, sharing a best practice, feature update, or industry use case. It should engage both novice and experienced ASP.NET developers, providing value to those working on web applications and character limit of the response generated should not exceed 100 character and keep it short and crisp."
     },
     "ai": {
-      "description": "Craft a tweet that discusses a breakthrough or important development in artificial intelligence. The tweet should spark curiosity and conversation around the potential and ethical considerations of AI technologies."
+      "description": "Craft a tweet that discusses a breakthrough or important development in artificial intelligence. The tweet should spark curiosity and conversation around the potential and ethical considerations of AI technologies and character limit of the response generated should not exceed 100 character and keep it short and crisp."
     },
     "cloud_computing": {
-      "description": "Write a tweet that promotes the benefits and future of cloud computing. It should highlight the importance of scalability, flexibility, and security in modern business and personal computing, encouraging followers to think about cloud adoption."
+      "description": "Write a tweet that promotes the benefits and future of cloud computing. It should highlight the importance of scalability, flexibility, and security in modern business and personal computing, encouraging followers to think about cloud adoption and character limit of the response generated should not exceed 100 character and keep it short and crisp."
     }
   }
 }
