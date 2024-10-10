@@ -4,3 +4,4 @@ tweepy
 uvicorn
 google-generativeai
 APScheduler
+flask
