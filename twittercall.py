@@ -103,7 +103,7 @@ def trigger_tweet():
 scheduler = BackgroundScheduler()
 
 # Schedule the tweet to run at 1 PM IST every day
-scheduler.add_job(tweet_daily, 'cron', hour=17, minute=05, timezone='Asia/Kolkata')
+scheduler.add_job(tweet_daily, 'cron', hour=17, minute=15, timezone='Asia/Kolkata')
 
 # Schedule the ping service to run every 180 seconds
 scheduler.add_job(ping_service, 'interval', seconds=180)
