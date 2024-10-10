@@ -112,5 +112,5 @@ scheduler.add_job(ping_service, 'interval', seconds=180)
 scheduler.start()
 
 # Run the Flask app
-if _name_ == "__main__":
+if __name__ == "__main__":
     app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
