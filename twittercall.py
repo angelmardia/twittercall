@@ -58,7 +58,7 @@ def tweet_daily():
         )
 
         # Load prompts from the uploaded JSON file
-        with open('/content/prompts.json') as f:
+        with open('prompts.json') as f:
             prompts = json.load(f)
 
         # Randomly pick a category and fetch the description
