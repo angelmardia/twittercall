@@ -2,3 +2,5 @@ python-dotenv
 requests
 tweepy
 uvicorn
+google-generativeai
+APScheduler
