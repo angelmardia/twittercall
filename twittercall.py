@@ -125,11 +125,16 @@ def trigger_tweet():
     # Call the tweet_daily function and return a response
     return tweet_daily()
 
+# Flask route to ping the service manually
+@app.route('/', methods=['GET'])
+def ping_route():
+    return "Hello Word!!"
+
 # Set up the scheduler
 scheduler = BackgroundScheduler()
 
 # Schedule the tweet to run at 1 PM IST every day
-scheduler.add_job(tweet_daily, 'cron', hour=19, minute=05, timezone='Asia/Kolkata')
+scheduler.add_job(tweet_daily, 'cron', hour=19, minute=10, timezone='Asia/Kolkata')
 
 # Schedule the ping service to run every 180 seconds
 scheduler.add_job(ping_service, 'interval', seconds=180)
