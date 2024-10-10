@@ -2,6 +2,7 @@ import os
 import random
 import tweepy
 import json
+import requests
 from datetime import datetime
 from apscheduler.schedulers.blocking import BlockingScheduler
 from pytz import timezone
@@ -18,6 +19,7 @@ ACCESS_SECRET = os.getenv('ACCESS_SECRET')
 CONSUMER_KEY = os.getenv('CONSUMER_KEY')
 CONSUMER_SECRET = os.getenv('CONSUMER_SECRET')
 API_KEY = os.getenv('GEMINI_API_KEY')
+PING_API_URL = os.getenv('PING_API_URL')  # Add the PING_API_URL to the .env file
 
 # Google Generative AI configuration
 genai.configure(api_key=API_KEY)
@@ -70,14 +72,25 @@ def tweet_daily():
     # Create the tweet using the new API
     post_result = newapi.create_tweet(text=tweet_text)
 
-# Call the function to tweet daily
-tweet_daily()
+# Function to ping the API to keep service alive
+def ping_service():
+    try:
+        response = requests.get(PING_API_URL)  # Make a GET request to keep the service awake
+        if response.status_code == 200:
+            print("Service ping successful.")
+        else:
+            print(f"Service ping failed with status code {response.status_code}")
+    except Exception as e:
+        print(f"Error pinging service: {e}")
 
 # Set up the scheduler
-# scheduler = BlockingScheduler()
+scheduler = BlockingScheduler()
 
-# Schedule the job to run at 1 PM IST every day
-# scheduler.add_job(tweet_daily, 'cron', hour=12, minute=25, timezone='Asia/Kolkata')
+# Schedule the tweet to run at 1 PM IST every day
+scheduler.add_job(tweet_daily, 'cron', hour=13, minute=0, timezone='Asia/Kolkata')
+
+# Schedule the ping service to run every 180 seconds
+scheduler.add_job(ping_service, 'interval', seconds=180)
 
 # Start the scheduler
-# scheduler.start()
+scheduler.start()
