@@ -43,7 +43,11 @@ def load_history():
     try:
         with open('history.json', 'r') as f:
             history = json.load(f)
+            # Ensure history is not empty, otherwise initialize as an empty list
+            if not history:
+                history = []
     except FileNotFoundError:
+        # If file is not found, return an empty list
         history = []
     return history
 
@@ -84,9 +88,9 @@ def tweet_daily():
         # Load the conversation history
         history = load_history()
 
-        # Generate text using Google Generative AI with history
+        # Generate text using Google Generative AI with history (if not empty)
         model = genai.GenerativeModel(model_name="gemini-1.5-flash", generation_config=generation_config)
-        chat_session = model.start_chat(history=history)  # Pass history to maintain context
+        chat_session = model.start_chat(history=history if history else None)  # Pass history if available
         response = chat_session.send_message(selected_prompt)
 
         # Print and post the generated text
@@ -125,7 +129,7 @@ def trigger_tweet():
 scheduler = BackgroundScheduler()
 
 # Schedule the tweet to run at 1 PM IST every day
-scheduler.add_job(tweet_daily, 'cron', hour=18, minute=50, timezone='Asia/Kolkata')
+scheduler.add_job(tweet_daily, 'cron', hour=19, minute=05, timezone='Asia/Kolkata')
 
 # Schedule the ping service to run every 180 seconds
 scheduler.add_job(ping_service, 'interval', seconds=180)
