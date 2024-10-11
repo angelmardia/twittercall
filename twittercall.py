@@ -22,12 +22,12 @@ CONSUMER_KEY = os.getenv('CONSUMER_KEY')
 CONSUMER_SECRET = os.getenv('CONSUMER_SECRET')
 API_KEY = os.getenv('GEMINI_API_KEY')
 PING_API_URL = os.getenv('PING_API_URL')  # Add the PING_API_URL to the .env file
+MONGODB_URL = os.getenv('MONGODB_URL')  # MongoDB URL
 
-# MongoDB connection
-MONGO_URI = "mongodb+srv://angelmardia3:dbangelxtreme@cluster0.psirm.mongodb.net/"
-client = MongoClient(MONGO_URI)
-db = client['twitterDB']  # Select the database
-history_collection = db['historyDB']  # Select the collection
+# MongoDB setup
+client = MongoClient(MONGODB_URL)
+db = client['twitterDB']
+history_collection = db['historyDB']
 
 # Flask app initialization
 app = Flask(__name__)
@@ -47,23 +47,19 @@ IST = timezone('Asia/Kolkata')
 
 # Load history from MongoDB
 def load_history():
+    # Fetch history from the MongoDB collection, keeping only the model responses
     history = []
-    try:
-        # Retrieve all documents from history collection
-        cursor = history_collection.find()
-        for document in cursor:
-            history.append(document['response_text'])  # Collect response_text field
-    except Exception as e:
-        print(f"Error loading history: {e}")
+    for record in history_collection.find({}, {"_id": 0, "response": 1}):
+        history.append({
+            "role": "model",
+            "parts": [record['response']]
+        })
     return history
 
-# Save response to MongoDB
+# Save the model response to MongoDB
 def save_to_history(response_text):
-    try:
-        # Insert response into the history collection
-        history_collection.insert_one({"response_text": response_text})
-    except Exception as e:
-        print(f"Error saving history: {e}")
+    history_record = {"response": response_text}
+    history_collection.insert_one(history_record)
 
 # Function to run the scheduled task
 def tweet_daily():
@@ -92,31 +88,30 @@ def tweet_daily():
         category = random.choice(list(prompts['prompts'].keys()))
         selected_prompt = prompts['prompts'][category]["description"]
 
-        # Load the conversation history
-        history = load_history()
-        formatted_history = []
-        for message in history:
-            formatted_history.append({"role": "model", "content": message})
+        # Load the conversation history from MongoDB (model responses only)
+        formatted_history = load_history()
 
-        # Generate text using Google Generative AI with history (if not empty)
+        # Generate text using Google Generative AI with the model responses from the history
         model = genai.GenerativeModel(model_name="gemini-1.5-flash", generation_config=generation_config)
 
-        # Start a chat session with properly formatted history
+        # Start a chat session with the formatted history
         chat_session = model.start_chat(history=formatted_history if formatted_history else None)
-        response = chat_session.send_message({"role": "user", "content": selected_prompt})
+        
+        # Send the new prompt as the user input
+        response = chat_session.send_message(selected_prompt)
 
-        # Print and post the generated text
+        # Get the model response text
         tweet_text = response.text
         print(tweet_text)
 
-        # Save the response to MongoDB history
+        # Save the model response to MongoDB
         save_to_history(tweet_text)
 
         # Create the tweet using the new API
         post_result = newapi.create_tweet(text=tweet_text)
 
         return jsonify({"status": "success", "tweet": tweet_text})
-    
+
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
@@ -146,7 +141,7 @@ def ping_route():
 scheduler = BackgroundScheduler()
 
 # Schedule the tweet to run at 1 PM IST every day
-scheduler.add_job(tweet_daily, 'cron', hour=13, minute=30, timezone='Asia/Kolkata')
+scheduler.add_job(tweet_daily, 'cron', hour=19, minute=10, timezone='Asia/Kolkata')
 
 # Schedule the ping service to run every 180 seconds
 scheduler.add_job(ping_service, 'interval', seconds=180)
