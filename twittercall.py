@@ -9,6 +9,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from pytz import timezone
 from dotenv import load_dotenv
 import google.generativeai as genai
+from pymongo import MongoClient
 
 # Specify the path to your .env file
 load_dotenv("/content/.env")
@@ -21,6 +22,12 @@ CONSUMER_KEY = os.getenv('CONSUMER_KEY')
 CONSUMER_SECRET = os.getenv('CONSUMER_SECRET')
 API_KEY = os.getenv('GEMINI_API_KEY')
 PING_API_URL = os.getenv('PING_API_URL')  # Add the PING_API_URL to the .env file
+
+# MongoDB connection
+MONGO_URI = "mongodb+srv://angelmardia3:dbangelxtreme@cluster0.psirm.mongodb.net/"
+client = MongoClient(MONGO_URI)
+db = client['twitterDB']  # Select the database
+history_collection = db['historyDB']  # Select the collection
 
 # Flask app initialization
 app = Flask(__name__)
@@ -37,6 +44,26 @@ generation_config = {
 
 # Timezone for IST
 IST = timezone('Asia/Kolkata')
+
+# Load history from MongoDB
+def load_history():
+    history = []
+    try:
+        # Retrieve all documents from history collection
+        cursor = history_collection.find()
+        for document in cursor:
+            history.append(document['response_text'])  # Collect response_text field
+    except Exception as e:
+        print(f"Error loading history: {e}")
+    return history
+
+# Save response to MongoDB
+def save_to_history(response_text):
+    try:
+        # Insert response into the history collection
+        history_collection.insert_one({"response_text": response_text})
+    except Exception as e:
+        print(f"Error saving history: {e}")
 
 # Function to run the scheduled task
 def tweet_daily():
@@ -65,14 +92,20 @@ def tweet_daily():
         category = random.choice(list(prompts['prompts'].keys()))
         selected_prompt = prompts['prompts'][category]["description"]
 
-        # Generate text using Google Generative AI
+        # Load the conversation history
+        history = load_history()
+
+        # Generate text using Google Generative AI with history (if not empty)
         model = genai.GenerativeModel(model_name="gemini-1.5-flash", generation_config=generation_config)
-        chat_session = model.start_chat()
+        chat_session = model.start_chat(history=history if history else None)  # Pass history if available
         response = chat_session.send_message(selected_prompt)
 
         # Print and post the generated text
         tweet_text = response.text
         print(tweet_text)
+
+        # Save the response to MongoDB history
+        save_to_history(tweet_text)
 
         # Create the tweet using the new API
         post_result = newapi.create_tweet(text=tweet_text)
@@ -99,11 +132,16 @@ def trigger_tweet():
     # Call the tweet_daily function and return a response
     return tweet_daily()
 
+# Flask route to ping the service manually
+@app.route('/', methods=['GET'])
+def ping_route():
+    return "Hello World!!"
+
 # Set up the scheduler
 scheduler = BackgroundScheduler()
 
 # Schedule the tweet to run at 1 PM IST every day
-scheduler.add_job(tweet_daily, 'cron', hour=17, minute=15, timezone='Asia/Kolkata')
+scheduler.add_job(tweet_daily, 'cron', hour=13, minute=30, timezone='Asia/Kolkata')
 
 # Schedule the ping service to run every 180 seconds
 scheduler.add_job(ping_service, 'interval', seconds=180)
