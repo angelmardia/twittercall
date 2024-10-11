@@ -94,11 +94,16 @@ def tweet_daily():
 
         # Load the conversation history
         history = load_history()
+        formatted_history = []
+        for message in history:
+            formatted_history.append({"role": "model", "content": message})
 
         # Generate text using Google Generative AI with history (if not empty)
         model = genai.GenerativeModel(model_name="gemini-1.5-flash", generation_config=generation_config)
-        chat_session = model.start_chat(history=history if history else None)  # Pass history if available
-        response = chat_session.send_message(selected_prompt)
+
+        # Start a chat session with properly formatted history
+        chat_session = model.start_chat(history=formatted_history if formatted_history else None)
+        response = chat_session.send_message({"role": "user", "content": selected_prompt})
 
         # Print and post the generated text
         tweet_text = response.text
