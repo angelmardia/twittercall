@@ -98,7 +98,12 @@ def tweet_daily():
         chat_session = model.start_chat(history=formatted_history if formatted_history else None)
         
         # Send the new prompt as the user input
-        response = chat_session.send_message(selected_prompt)
+        response = chat_session.send_message({
+            "author": "user", 
+            "content": {
+                "parts": [{"text": selected_prompt}]
+            }
+        })
 
         # Get the model response text
         tweet_text = response.text
