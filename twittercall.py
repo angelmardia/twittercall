@@ -61,6 +61,11 @@ def save_to_history(response_text):
     history_record = {"response": response_text}
     history_collection.insert_one(history_record)
 
+# Check if a tweet with the same content already exists in MongoDB
+def is_tweet_posted(tweet_text):
+    # Search for a tweet with the same content in MongoDB
+    return history_collection.find_one({"response": tweet_text}) is not None
+
 # Function to run the scheduled task
 def tweet_daily():
     try:
@@ -104,11 +109,16 @@ def tweet_daily():
         tweet_text = response.text
         print(tweet_text)
 
-        # Save the model response to MongoDB
-        save_to_history(tweet_text)
-
+        # Check if this tweet was already posted
+        if is_tweet_posted(tweet_text):
+            print("Tweet already posted previously.")
+            return jsonify({"status": "error", "message": "Tweet already posted previously"}), 400
+        
         # Create the tweet using the new API
         post_result = newapi.create_tweet(text=tweet_text)
+
+        # Save the model response to MongoDB as it is now posted
+        save_to_history(tweet_text)
 
         return jsonify({"status": "success", "tweet": tweet_text})
 
